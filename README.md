@@ -56,7 +56,7 @@ We welcome contributions! Please open an issue or submit a pull request to sugge
 
 ***
 
-## 📜 License  
+## License  
 This project is licensed under the **MIT License**.  
 
 ***
