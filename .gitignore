@@ -38,3 +38,6 @@ var/
 # OS-specific files
 .DS_Store
 Thumbs.db
+
+#environment variable
+.env
