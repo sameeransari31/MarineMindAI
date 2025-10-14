@@ -39,5 +39,6 @@ python-dotenv
 tqdm
 requests
 
+tesseract
 
 jupyter
