@@ -7,6 +7,15 @@ langchain-community
 langchain-groq
 langchain-huggingface
 
+easyocr
+PyMuPDF
+Pillow
+python-docx
+
+torch
+torchvision
+
+unstructured
 
 faiss-cpu
 sentence-transformers
