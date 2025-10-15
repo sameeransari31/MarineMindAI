@@ -5,11 +5,13 @@ from typing import List, Optional
 from dotenv import load_dotenv
 from langchain_groq import ChatGroq
 from langchain.agents import AgentExecutor, create_structured_chat_agent
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder, SystemMessagePromptTemplate
 from langchain_core.tools import Tool
-from langchain_core.pydantic_v1 import BaseModel, Field
+from langchain.tools import StructuredTool
+from pydantic import BaseModel, Field
 from langchain.memory import ConversationBufferWindowMemory
-from retriever import HybridRetriever 
+from retriever import HybridRetriever
+from langchain import hub
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 
@@ -45,45 +47,76 @@ class MarineMindOutput(BaseModel):
     safety_summary: str = Field(description="A summary of all critical safety warnings or procedures (e.g., LOTO, PPE) mentioned in the context. If none, state 'No specific safety warnings were found for this procedure.'")
 
 
+class SearchInput(BaseModel):
+    """Input schema for any tool that performs a search."""
+    query: str = Field(description="The search query string.")
+
+class MachineryStatusInput(BaseModel):
+    """Input schema for the get_current_machinery_status tool."""
+    machinery_name: str = Field(description="The name of the machinery to get the status for.")
+
 
 def search_maintenance_logs_func(query: str) -> str:
-    """Placeholder function to search past maintenance logs."""
+    """
+    Placeholder for searching maintenance logs.
+    In a real application, this would query a database.
+    """
     logging.info(f"TOOL CALLED: search_maintenance_logs with query: '{query}'")
-    return "Functionality not implemented. This tool should search a database of past maintenance logs for similar issues."
+    return "No maintenance logs found. You must rely on the ship manuals for troubleshooting."
+
+
 
 def get_machinery_status_func(machinery_name: str) -> str:
-    """Placeholder function to get real-time machinery status."""
+    """
+    Placeholder for getting live machinery data.
+    In a real application, this would connect to a ship's sensor API.
+    """
     logging.info(f"TOOL CALLED: get_machinery_status for: '{machinery_name}'")
-    return f"Functionality not implemented. This tool should connect to the ship's sensor API to get live data for '{machinery_name}'."
+    return f"Live sensor data for the '{machinery_name}' is currently unavailable. Proceed with manual checks as per the documentation."
+
+
 
 def safety_check_func(steps: str) -> str:
     """
-    A final safety check on the proposed steps. This acts as a guardrail.
+    Placeholder for a safety check.
+    In a real application, this might involve a more complex check or human-in-the-loop.
     """
+
     logging.info(f"TOOL CALLED: safety_check on proposed steps.")
 
-    return (
-        "Safety check passed. The proposed steps appear to align with standard safety protocols. "
-        "Always ensure Lock-Out/Tag-Out (LOTO) is performed before starting any maintenance."
-    )
+    return "Safety check passed. The proposed steps appear to align with standard safety protocols. Always ensure Lock-Out/Tag-Out (LOTO) is performed before starting any maintenance."
 
 
 
 AGENT_PROMPT_TEMPLATE = """
-You are MarineMind, an AI Senior Marine Engineer Assistant. Your primary directive is to ensure the safety of the crew and the operational integrity of the vessel.
+You are a marine engineering assistant named MarineMind. Your task is to help officers solve problems by using the available tools.
 
-**Core Directives:**
-1.  **Safety First:** Prioritize safety above all. Before providing any final answer, you MUST use the `safety_check` tool.
-2.  **Use Your Tools:** Methodically use your available tools to gather all necessary information from manuals, logs, and live data before forming a conclusion.
-3.  **Be Structured:** Provide your final answer ONLY in the structured JSON format required.
-4.  **Stay in Context:** Base your answers strictly on the information you gather from your tools and the ongoing conversation. Do not use outside knowledge.
-5.  **Think Step-by-Step:** Clearly articulate your reasoning process in your thoughts.
+TOOLS:
+------
+You have access to the following tools:
 
-**Conversation History:**
+{tools}
+
+To use a tool, please respond with a JSON blob containing "action" and "action_input" keys.
+The "action" should be one of [{tool_names}].
+
+Example:
+```json
+{{
+  "action": "search_ship_manuals",
+  "action_input": "Steps to troubleshoot a vacuum valve failure alarm"
+}}
+CONVERSATION HISTORY:
 {chat_history}
 
-Begin!
+USER QUESTION:
+{input}
+
+YOUR RESPONSE:
+{agent_scratchpad}
 """
+
+
 
 class AgentManager:
     """
@@ -91,7 +124,7 @@ class AgentManager:
     for the MarineMind system.
     """
 
-    def __init__(self, retriever: HybridRetriever, memory: ConversationBufferWindowMemory, model_name: str = "llama3-70b-8192", temperature: float = 0):
+    def __init__(self, retriever: HybridRetriever, memory: ConversationBufferWindowMemory, model_name: str = "llama-3.1-8b-instant", temperature: float = 0):
         """
         Initializes the AgentManager.
         """
@@ -107,13 +140,19 @@ class AgentManager:
         self.tools = self._get_custom_tools()
         self.memory = memory
         
-        prompt = ChatPromptTemplate.from_messages([
-            ("system", AGENT_PROMPT_TEMPLATE),
-            MessagesPlaceholder(variable_name="chat_history"),
-            ("human", "{input}"),
-            MessagesPlaceholder(variable_name="agent_scratchpad"),
-        ])
-        
+        prompt = hub.pull("hwchase17/structured-chat-agent")
+
+        for message_template in prompt.messages:
+            if isinstance(message_template, SystemMessagePromptTemplate):
+                message_template.prompt.template += (
+                    "\n\n**CRITICAL BEHAVIORAL RULE:**\n"
+                    "If you use a tool and the information returned is not helpful, or if you get the same unhelpful results after two attempts, DO NOT try to use the tool again.\n"
+                    "Instead, you MUST formulate a final answer based on the information you have already gathered.\n"
+                    "If you do not have enough information to answer, state that clearly and ask for more details. Do not get stuck in a loop."
+                )
+                break
+
+
         agent = create_structured_chat_agent(self.llm, self.tools, prompt)
         
         self.agent_executor = AgentExecutor(
@@ -121,37 +160,55 @@ class AgentManager:
             tools=self.tools,
             memory=self.memory,
             verbose=True,
-            handle_parsing_errors="""
-            I apologize, but I encountered an error formatting my response. 
-            Please try rephrasing your question. If the issue persists, 
-            the context from the manual may be unclear.
-            """.strip(),
+            handle_parsing_errors=True,
             max_iterations=10
         )
+
+    def _search_and_summarize_manuals(self, query: str) -> str:
+        """
+        Calls the retriever to search the ship manuals, then returns a
+        concise summary of the findings to avoid overflowing the context window.
+        """
+        logging.info(f"TOOL CALLED: _search_and_summarize_manuals with query: '{query}'")
+        
+        retrieved_docs = self.retriever.get_relevant_documents(query)
+
+        if not retrieved_docs:
+            return "No relevant documents found in the ship manuals for this query."
+
+        summary = f"Found {len(retrieved_docs)} relevant document sections for the query: '{query}'.\n"
+        summary += "Key snippets include:\n"
+        for doc in retrieved_docs:
+            snippet = doc.page_content[:100].replace('\n', ' ') + '...'
+            summary += f"- Source: {doc.metadata.get('source', 'N/A')}, Page: {doc.metadata.get('page', 'N/A')}, Snippet: \"{snippet}\"\n"
+            
+        return summary
 
     def _get_custom_tools(self) -> List[Tool]:
         """Defines the custom tools available to the agent."""
         tools = [
             Tool(
                 name="search_ship_manuals",
-                func=self.retriever.get_relevant_documents,
-                description="Crucial for finding procedures, diagrams, and specs in technical manuals. Use this first for any technical query.",
+                func=self._search_and_summarize_manuals,
+                description="Searches ship's technical manuals. Use to find official procedures.",
+                args_schema=SearchInput
             ),
             Tool(
                 name="search_maintenance_logs",
                 func=search_maintenance_logs_func,
-                description="Searches past maintenance logs to see if a similar problem has occurred before. Useful for recurring issues.",
+                description="Searches past maintenance logs for similar problems.",
+                args_schema=SearchInput
             ),
             Tool(
                 name="get_current_machinery_status",
                 func=get_machinery_status_func,
-                description="Gets real-time sensor data (temp, pressure, RPM) for a specific piece of machinery. Use to compare live data with manual specs.",
+                description="Gets real-time sensor data for a specific piece of machinery.",
+                args_schema=MachineryStatusInput
             ),
             Tool(
                 name="safety_check",
                 func=safety_check_func,
-                description="MANDATORY final check. Before providing the final answer, use this tool to review the proposed steps for any safety concerns.",
-                args_schema=None
+                description="MANDATORY final safety check of proposed steps.",
             )
         ]
         logging.info(f"Agent tools created: {[tool.name for tool in tools]}")
@@ -168,8 +225,34 @@ class AgentManager:
             dict: The agent's final, structured response.
         """
         logging.info(f"Running Advanced Agent for query: '{user_query}'")
-        response = self.agent_executor.invoke({
+
+        agent_result = self.agent_executor.invoke({
             "input": user_query
         })
 
-        return response.get("output", {})
+        raw_output = agent_result.get("output", "")
+        logging.info(f"Agent finished with raw text output.")
+
+
+
+        logging.info("Parsing raw output into the final structured format...")
+        parser_llm = self.llm.with_structured_output(MarineMindOutput)
+
+        parser_prompt = ChatPromptTemplate.from_messages([
+            ("system", """You are an expert at parsing and structuring information.
+            Your task is to take the user's text and format it perfectly into the `MarineMindOutput` JSON schema.
+            Pay close attention to data types. Fields expecting a list (like `remediation_steps`, `evidence`, `possible_causes`, `references`, and `followup_questions`) MUST be formatted as JSON arrays.
+
+            **CRITICAL RULE for `remediation_steps`:** Inside each step of the `remediation_steps` list, the `tools` field MUST be a JSON array of strings.
+            - If one tool is mentioned (e.g., "PPE"), you MUST format it as `["PPE"]`.
+            - If multiple tools are mentioned, format them as `["Tool A", "Tool B"]`.
+            - If no tools are mentioned or it says "N/A", you MUST format it as an empty array: `[]`.
+            DO NOT use a string for the `tools` field under any circumstances."""),
+            ("human", "Here is the text to parse:\n\n{text_to_parse}")
+        ])
+
+        parser_chain = parser_prompt | parser_llm
+
+        structured_response = parser_chain.invoke({"text_to_parse": raw_output})
+
+        return structured_response

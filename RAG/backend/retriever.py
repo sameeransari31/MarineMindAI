@@ -11,26 +11,28 @@ from collections import defaultdict
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 
 class HybridRetriever(BaseRetriever):
-    def __init__(
-        self,
-        vectorstore: Any,
-        llm: Optional[Any] = None,
-        enable_debug: bool = False,
-        doc_sample: Optional[List[Document]] = None,
-    ):
-        """
-        HybridRetriever:
-        - Auto-selects strategies based on document metadata and length
-        - Multi-stage retrieval
-        - Normalized, weighted merging of results
-        - Automatic stage weight tuning based on dataset
-        """
-        self.vectorstore = vectorstore
-        self.llm = llm
-        self.enable_debug = enable_debug
+
+    """
+    HybridRetriever:
+    - Auto-selects strategies based on document metadata and length
+    - Multi-stage retrieval
+    - Normalized, weighted merging of results
+    - Automatic stage weight tuning based on dataset
+    """
+
+    vectorstore: Any
+    llm: Optional[Any] = None
+    enable_debug: bool = False
+    strategy: Dict[str, bool] = {}
+    stage_weights: Dict[str, float] = {}
+
+
+    def __init__(self, **data: Any):
+
+        super().__init__(**data)
+        doc_sample = data.get("doc_sample", [])
+        
         self.strategy = self.auto_select_strategy(doc_sample or [])
-
-
         self.stage_weights = {
             'semantic_expansion': 0.2,
             'hybrid': 0.4,
@@ -39,7 +41,6 @@ class HybridRetriever(BaseRetriever):
             'mmr': 0.1,
             'contextual': 0.2
         }
-
         self.tune_stage_weights(doc_sample or [])
 
 
