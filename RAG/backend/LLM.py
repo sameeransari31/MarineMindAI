@@ -146,7 +146,7 @@ class AgentManager:
             if isinstance(message_template, SystemMessagePromptTemplate):
                 message_template.prompt.template += (
                     "\n\n**YOUR WORKFLOW:**\n"
-                    "1.  **Gather Information:** First, use the `search_ship_manuals` and `search_maintenance_logs` tools to gather all relevant context for the user's query.\n"
+                    "1.  **Gather Information:** First, use the `search_ship_manuals` and `search_maintenance_logs` tools to gather all relevant context for the user's query. **Think carefully and try to find all necessary information with a single, effective search query for each tool.** Do not use the same tool repeatedly for slightly different queries.\n"
                     "2.  **Formulate a Plan:** Based on the information you've gathered, formulate a step-by-step plan to address the user's problem.\n"
                     "3.  **Final Safety Check:** BEFORE presenting the plan, use the `safety_check` tool ONCE to validate the safety of your proposed steps. Pass your entire proposed plan to this tool.\n"
                     "4.  **Final Answer:** After the safety check passes, immediately provide your final, comprehensive answer to the user. DO NOT use any more tools after the safety check is complete."
@@ -162,7 +162,7 @@ class AgentManager:
             memory=self.memory,
             verbose=True,
             handle_parsing_errors=True,
-            max_iterations=15
+            max_iterations=45
         )
 
     def _search_and_summarize_manuals(self, query: str) -> str:
@@ -242,13 +242,16 @@ class AgentManager:
         parser_prompt = ChatPromptTemplate.from_messages([
             ("system", """You are an expert at parsing and structuring information.
             Your task is to take the user's text and format it perfectly into the `MarineMindOutput` JSON schema.
-            Pay close attention to data types. Fields expecting a list (like `remediation_steps`, `evidence`, `possible_causes`, `references`, and `followup_questions`) MUST be formatted as JSON arrays.
+            Pay close attention to data types.
 
-            **CRITICAL RULE for `remediation_steps`:** Inside each step of the `remediation_steps` list, the `tools` field MUST be a JSON array of strings.
-            - If one tool is mentioned (e.g., "PPE"), you MUST format it as `["PPE"]`.
-            - If multiple tools are mentioned, format them as `["Tool A", "Tool B"]`.
-            - If no tools are mentioned or it says "N/A", you MUST format it as an empty array: `[]`.
-            DO NOT use a string for the `tools` field under any circumstances."""),
+            **CRITICAL RULES:**
+            1.  The `remediation_steps` field **MUST be a proper JSON array of objects**. It must NOT be a string.
+                - For example: `{{"remediation_steps": [{{"step": 1, "action": "Do the first thing"}}]}}` is CORRECT.
+                - For example: `{{"remediation_steps": "[{{\\"step\\": 1}}]"}}` is INCORRECT.
+            2.  Inside each remediation step object, the `step` field **MUST be an integer** (e.g., `1`, `2`), not a string (e.g., `"1"`).
+            3.  The `tools` field inside each step **MUST be a JSON array of strings** (e.g., `["wrench"]`, `[]`), not a plain string.
+            4.  All other fields that are lists (like `possible_causes`, `evidence`, etc.) **MUST also be formatted as JSON arrays**.
+            """),
             ("human", "Here is the text to parse:\n\n{text_to_parse}")
         ])
 
