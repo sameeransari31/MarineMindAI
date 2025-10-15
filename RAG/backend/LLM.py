@@ -145,10 +145,11 @@ class AgentManager:
         for message_template in prompt.messages:
             if isinstance(message_template, SystemMessagePromptTemplate):
                 message_template.prompt.template += (
-                    "\n\n**CRITICAL BEHAVIORAL RULE:**\n"
-                    "If you use a tool and the information returned is not helpful, or if you get the same unhelpful results after two attempts, DO NOT try to use the tool again.\n"
-                    "Instead, you MUST formulate a final answer based on the information you have already gathered.\n"
-                    "If you do not have enough information to answer, state that clearly and ask for more details. Do not get stuck in a loop."
+                    "\n\n**YOUR WORKFLOW:**\n"
+                    "1.  **Gather Information:** First, use the `search_ship_manuals` and `search_maintenance_logs` tools to gather all relevant context for the user's query.\n"
+                    "2.  **Formulate a Plan:** Based on the information you've gathered, formulate a step-by-step plan to address the user's problem.\n"
+                    "3.  **Final Safety Check:** BEFORE presenting the plan, use the `safety_check` tool ONCE to validate the safety of your proposed steps. Pass your entire proposed plan to this tool.\n"
+                    "4.  **Final Answer:** After the safety check passes, immediately provide your final, comprehensive answer to the user. DO NOT use any more tools after the safety check is complete."
                 )
                 break
 
@@ -161,7 +162,7 @@ class AgentManager:
             memory=self.memory,
             verbose=True,
             handle_parsing_errors=True,
-            max_iterations=10
+            max_iterations=15
         )
 
     def _search_and_summarize_manuals(self, query: str) -> str:
@@ -205,9 +206,9 @@ class AgentManager:
                 description="Gets real-time sensor data for a specific piece of machinery.",
                 args_schema=MachineryStatusInput
             ),
-            Tool(
-                name="safety_check",
+            StructuredTool.from_function(
                 func=safety_check_func,
+                name="safety_check",
                 description="MANDATORY final safety check of proposed steps.",
             )
         ]

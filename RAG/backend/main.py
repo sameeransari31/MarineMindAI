@@ -15,8 +15,8 @@ groq_api_key = os.getenv("GROQ_API_KEY")
 
 FILE_PATH = "Bypass valve.pdf"
 VECTOR_STORE_PATH = "faiss_index"
-USER_QUERY = "MarineMind, the vacuum valve indicator light on the control panel stays red even though the valve seems to be working. What should I check?"
-SESSION_ID = "Mahek002"
+USER_QUERY = "MarineMind, the actuator of the BWTS vacuum valve is moving slowly and sometimes gets stuck. What might be the issue?"
+SESSION_ID = "Mahek003"
 
 def main():
     """
