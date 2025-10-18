@@ -1,13 +1,13 @@
 import os
 import pprint
 from dotenv import load_dotenv
-from loaders import DocumentLoader
-from chunking import DocumentChunker
-from embedding import EmbeddingGenerator
-from vectorstore import VectorStoreManager
-from retriever import HybridRetriever
-from LLM import AgentManager
-from memory import MemoryManager
+from .loaders import DocumentLoader
+from .chunking import DocumentChunker
+from .embedding import EmbeddingGenerator
+from .vectorstore import VectorStoreManager
+from .retriever import HybridRetriever
+from .LLM import AgentManager
+from .memory import MemoryManager
 from langchain_groq import ChatGroq
 load_dotenv()
 groq_api_key = os.getenv("GROQ_API_KEY")
