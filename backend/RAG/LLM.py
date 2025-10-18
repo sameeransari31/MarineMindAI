@@ -10,7 +10,7 @@ from langchain_core.tools import Tool
 from langchain.tools import StructuredTool
 from pydantic import BaseModel, Field
 from langchain.memory import ConversationBufferWindowMemory
-from retriever import HybridRetriever
+from .retriever import HybridRetriever
 from langchain import hub
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
