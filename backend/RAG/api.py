@@ -7,7 +7,9 @@ from pydantic import BaseModel
 
 from langchain_groq import ChatGroq
 
+
 from .loaders import DocumentLoader
+from .chunking import DocumentChunker
 from .embedding import EmbeddingGenerator
 from .vectorstore import VectorStoreManager
 from .retriever import HybridRetriever
