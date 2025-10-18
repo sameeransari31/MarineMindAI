@@ -1,0 +1,36 @@
+MarineMindAI/
+│
+├── backend/
+│   │
+│   ├── RAG/                                  # Your existing feature
+│   │   ├── loaders.py
+│   │   ├── chunking.py
+│   │   ├── embedding.py
+│   │   ├── vectorstore.py
+│   │   ├── retriever.py
+│   │   ├── LLM.py
+│   │   ├── memory.py
+│   │   ├── main.py
+│   │   └── api.py                            # FastAPI routes for RAG feature
+│   │
+│   ├── NoonReport/                           # Future feature folder
+│   │   ├── preprocessing.py
+│   │   ├── model.py
+│   │   ├── utils.py
+│   │   └── api.py                            # Routes for Noon Report feature
+│   │
+│   ├── core/                                 # Shared utilities
+│   │   ├── config.py                         # Loads env vars, constants
+│   │   ├── logger.py                         # Custom logging setup
+│   │   └── utils.py                          # Common helper functions
+│   │
+│   ├── main_api.py                           # Main FastAPI entry point
+│   ├── requirements.txt
+│   └── __init__.py
+│
+├── frontend/                                 # React UI (all features UI)
+│   
+│
+├── .env                                      # Global keys (e.g. GROQ_API_KEY)
+├── README.md
+└── .gitignore
