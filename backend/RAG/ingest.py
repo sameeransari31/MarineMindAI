@@ -13,7 +13,9 @@ load_dotenv()
 groq_api_key = os.getenv("GROQ_API_KEY")
 
 
-FILE_PATH = "text_1.pdf"
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+FILE_PATH = os.path.join(SCRIPT_DIR, "text_1.pdf")
 VECTOR_STORE_PATH = "faiss_index"
 USER_QUERY = "What checks should be done before operating the BWTS, give steps in detail and long answer and explain every step that how to do it because i am a beginner"
 SESSION_ID = "tesing003"
