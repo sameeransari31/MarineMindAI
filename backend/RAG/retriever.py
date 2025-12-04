@@ -25,12 +25,14 @@ class HybridRetriever(BaseRetriever):
     enable_debug: bool = False
     strategy: Dict[str, bool] = {}
     stage_weights: Dict[str, float] = {}
+    default_k: int = 10
 
 
     def __init__(self, **data: Any):
 
         super().__init__(**data)
         doc_sample = data.get("doc_sample", [])
+        self.default_k = data.get("default_k", 10)
         
         self.strategy = self.auto_select_strategy(doc_sample or [])
         self.stage_weights = {
@@ -114,14 +116,27 @@ class HybridRetriever(BaseRetriever):
     def _get_relevant_documents(
         self,
         query: str,
-        k: int = 5,
+        k: Optional[int] = None,
         *,
         run_manager: Optional[CallbackManagerForRetrieverRun] = None
     ) -> List[Document]:
+        # Use default_k if k is not provided
+        if k is None:
+            k = self.default_k
         docs = self.multi_stage_search(query, k=k)
         if run_manager:
             run_manager.on_retriever_end(docs)
         return docs
+    
+    def get_relevant_documents_with_k(
+        self,
+        query: str,
+        k: int = 10,
+        *,
+        run_manager: Optional[CallbackManagerForRetrieverRun] = None
+    ) -> List[Document]:
+        """Helper method to get documents with a specific k value."""
+        return self._get_relevant_documents(query, k=k, run_manager=run_manager)
 
 
     def similarity_search(self, query: str, k: int = 5) -> List[Document]:

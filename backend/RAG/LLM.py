@@ -18,13 +18,13 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 
 class Evidence(BaseModel):
     file: str = Field(description="The name of the source manual file.")
-    page: str = Field(description="The page number where the evidence was found.")
+    page: str = Field(description="The page number where the evidence was found. CRITICAL: Officers need this to locate information. Format as it appears (e.g., '42' or 'Page 42').")
     section: Optional[str] = Field(description="The section title, if available.")
-    quote: str = Field(description="The exact quote from the manual that supports the diagnosis.")
+    quote: str = Field(description="The exact, detailed quote from the manual that supports the diagnosis. Include enough context to be comprehensive.")
 
 class Step(BaseModel):
     step: int = Field(description="Step number (e.g., 1)")
-    action: str = Field(description="A clear, actionable instruction for the officer.")
+    action: str = Field(description="A detailed, comprehensive, and clear actionable instruction for the officer. Should include specific procedures, explanations, and page references when applicable (e.g., 'Refer to Page 42 for detailed diagrams').")
     tools: Optional[List[str]] = Field(description="A list of tools needed for this step, if mentioned.")
     time_est: Optional[str] = Field(description="Estimated time for this step, if available in the text.")
 
@@ -35,16 +35,16 @@ class Reference(BaseModel):
 
 class MarineMindOutput(BaseModel):
     """The final structured output of the MarineMind agent."""
-    problem_summary: str = Field(description="A concise, one-sentence summary of the reported issue.")
-    possible_causes: List[str] = Field(description="A list of potential root causes for the problem, derived directly from the provided context.")
-    evidence: List[Evidence] = Field(description="A list of direct quotes from the manuals that support the diagnosis.")
-    remediation_steps: List[Step] = Field(description="A clear, step-by-step troubleshooting or maintenance plan.")
-    expected_outcome: str = Field(description="A description of what a successful resolution looks like.")
-    escalation: str = Field(description="Clear instructions on when and who to escalate the issue to if troubleshooting fails.")
-    references: List[Reference] = Field(description="A list of references to diagrams, figures, or tables in the manuals.")
+    problem_summary: str = Field(description="A detailed, comprehensive summary of the reported issue. Should be thorough and informative, not just one sentence.")
+    possible_causes: List[str] = Field(description="A detailed list of potential root causes for the problem, derived directly from the provided context. Each cause should be explained comprehensively.")
+    evidence: List[Evidence] = Field(description="A comprehensive list of direct quotes from the manuals that support the diagnosis. MUST include page numbers so officers know where to find this information.")
+    remediation_steps: List[Step] = Field(description="A detailed, comprehensive, step-by-step troubleshooting or maintenance plan. Each step should be thorough and include page references when applicable. Tell officers which pages to visit for detailed procedures.")
+    expected_outcome: str = Field(description="A detailed, comprehensive description of what a successful resolution looks like.")
+    escalation: str = Field(description="Clear, detailed instructions on when and who to escalate the issue to if troubleshooting fails.")
+    references: List[Reference] = Field(description="A comprehensive list of references to diagrams, figures, or tables in the manuals. MUST include accurate page numbers so officers can locate these references.")
     confidence_percent: int = Field(description="An integer from 0 to 100 representing confidence that the context contains a complete solution.")
     followup_questions: List[str] = Field(description="A list of clarifying questions to ask the officer to narrow down the problem further.")
-    safety_summary: str = Field(description="A summary of all critical safety warnings or procedures (e.g., LOTO, PPE) mentioned in the context. If none, state 'No specific safety warnings were found for this procedure.'")
+    safety_summary: str = Field(description="A comprehensive summary of all critical safety warnings or procedures (e.g., LOTO, PPE) mentioned in the context. If none, state 'No specific safety warnings were found for this procedure.'")
 
 
 class SearchInput(BaseModel):
@@ -145,11 +145,24 @@ class AgentManager:
         for message_template in prompt.messages:
             if isinstance(message_template, SystemMessagePromptTemplate):
                 message_template.prompt.template += (
-                    "\n\n**YOUR WORKFLOW:**\n"
+                    "\n\n**CRITICAL INSTRUCTIONS FOR DETAILED, ACCURATE ANSWERS:**\n"
+                    "- ALWAYS provide comprehensive, detailed, and lengthy answers. Officers need thorough information to make informed decisions.\n"
+                    "- ALWAYS include specific page numbers when referencing information from manuals. Format: 'Please refer to Page X of [filename]' or 'As stated on Page Y'.\n"
+                    "- Be extremely detailed in your explanations - include context, background information, and step-by-step guidance.\n"
+                    "- When mentioning procedures or information, always tell officers which specific pages to visit for more details.\n"
+                    "- Provide accurate, fact-based answers directly from the retrieved documents. Quote specific information when relevant.\n"
+                    "- Expand on explanations - don't just give brief answers. Officers need comprehensive understanding.\n\n"
+                    
+                    "**YOUR WORKFLOW:**\n"
                     "1.  **Gather Information:** First, use the `search_ship_manuals` and `search_maintenance_logs` tools to gather all relevant context for the user's query. **Think carefully and try to find all necessary information with a single, effective search query for each tool.** Do not use the same tool repeatedly for slightly different queries.\n"
-                    "2.  **Formulate a Plan:** Based on the information you've gathered, formulate a step-by-step plan to address the user's problem.\n"
+                    "2.  **Formulate a Comprehensive Plan:** Based on the information you've gathered, formulate a detailed, step-by-step plan with extensive explanations. Include page references for each major point.\n"
                     "3.  **Final Safety Check:** BEFORE presenting the plan, use the `safety_check` tool ONCE to validate the safety of your proposed steps. Pass your entire proposed plan to this tool.\n"
-                    "4.  **Final Answer:** After the safety check passes, immediately provide your final, comprehensive answer to the user. DO NOT use any more tools after the safety check is complete."
+                    "4.  **Final Answer:** After the safety check passes, provide your FINAL, COMPREHENSIVE, DETAILED answer to the user. Your answer MUST:\n"
+                    "    - Be lengthy and thorough (aim for comprehensive explanations, not brief summaries)\n"
+                    "    - Include specific page numbers for officers to reference (e.g., 'Officers should visit Page 42 for detailed diagrams')\n"
+                    "    - Provide accurate, detailed information from the retrieved documents\n"
+                    "    - Include all relevant context and background information\n"
+                    "    DO NOT use any more tools after the safety check is complete."
                 )
                 break
 
@@ -167,22 +180,39 @@ class AgentManager:
 
     def _search_and_summarize_manuals(self, query: str) -> str:
         """
-        Calls the retriever to search the ship manuals, then returns a
-        concise summary of the findings to avoid overflowing the context window.
+        Calls the retriever to search the ship manuals, then returns comprehensive
+        context with full document content and page references.
         """
         logging.info(f"TOOL CALLED: _search_and_summarize_manuals with query: '{query}'")
         
-        retrieved_docs = self.retriever.get_relevant_documents(query)
+        # Retrieve more documents for comprehensive context (default_k is now 10)
+        retrieved_docs = self.retriever.get_relevant_documents_with_k(query, k=10)
 
         if not retrieved_docs:
             return "No relevant documents found in the ship manuals for this query."
 
-        summary = f"Found {len(retrieved_docs)} relevant document sections for the query: '{query}'.\n"
-        summary += "Key snippets include:\n"
-        for doc in retrieved_docs:
-            snippet = doc.page_content[:100].replace('\n', ' ') + '...'
-            summary += f"- Source: {doc.metadata.get('source', 'N/A')}, Page: {doc.metadata.get('page', 'N/A')}, Snippet: \"{snippet}\"\n"
+        # Build comprehensive context with full document content
+        summary = f"Found {len(retrieved_docs)} relevant document sections for the query: '{query}'.\n\n"
+        summary += "=" * 80 + "\n"
+        summary += "RELEVANT DOCUMENT CONTENT WITH PAGE REFERENCES:\n"
+        summary += "=" * 80 + "\n\n"
+        
+        for idx, doc in enumerate(retrieved_docs, 1):
+            source = doc.metadata.get('source', 'N/A')
+            page = doc.metadata.get('page', 'N/A')
             
+            # Extract filename from full path
+            filename = os.path.basename(source) if source != 'N/A' else 'N/A'
+            
+            summary += f"\n--- DOCUMENT {idx} ---\n"
+            summary += f"Source File: {filename}\n"
+            summary += f"Page Number: {page}\n"
+            summary += f"{'=' * 60}\n"
+            summary += f"FULL CONTENT:\n{doc.page_content}\n"
+            summary += f"{'=' * 60}\n\n"
+            
+        summary += "\nIMPORTANT: When providing your answer, ALWAYS mention the specific page numbers (e.g., 'Please refer to Page 42 of the manual') where officers should look for more details.\n"
+        
         return summary
 
     def _get_custom_tools(self) -> List[Tool]:
@@ -191,7 +221,7 @@ class AgentManager:
             Tool(
                 name="search_ship_manuals",
                 func=self._search_and_summarize_manuals,
-                description="Searches ship's technical manuals. Use to find official procedures.",
+                description="Searches ship's technical manuals comprehensively. Returns full document content with page numbers. Use this to find detailed official procedures, troubleshooting steps, and technical information. The results include specific page references that officers should visit for detailed information.",
                 args_schema=SearchInput
             ),
             Tool(
@@ -251,6 +281,18 @@ class AgentManager:
             2.  Inside each remediation step object, the `step` field **MUST be an integer** (e.g., `1`, `2`), not a string (e.g., `"1"`).
             3.  The `tools` field inside each step **MUST be a JSON array of strings** (e.g., `["wrench"]`, `[]`), not a plain string.
             4.  All other fields that are lists (like `possible_causes`, `evidence`, etc.) **MUST also be formatted as JSON arrays**.
+            
+            **IMPORTANT FOR DETAILED ANSWERS:**
+            5.  When parsing the text, ensure all fields are COMPREHENSIVE and DETAILED:
+                - `problem_summary`: Should be a thorough, detailed summary (not just one sentence)
+                - `possible_causes`: Should include ALL identified causes with detailed explanations
+                - `remediation_steps`: Each step's `action` field should be DETAILED and COMPREHENSIVE, not brief. Include specific procedures, page references (e.g., "Refer to Page 42"), and thorough explanations
+                - `expected_outcome`: Should be detailed and descriptive
+                - `evidence`: MUST include page numbers in the `page` field. Format page numbers as they appear (e.g., "42", "Page 42")
+                - `references`: MUST include accurate page numbers. These are critical for officers to locate information
+            6.  **PAGE REFERENCES ARE CRITICAL**: Ensure ALL evidence and references include accurate page numbers. Officers need to know which pages to visit.
+            7.  Make answers LENGTHY and THOROUGH. Don't summarize - expand and provide comprehensive information.
+            8.  In remediation steps, explicitly mention page numbers when referencing procedures or information from manuals.
             """),
             ("human", "Here is the text to parse:\n\n{text_to_parse}")
         ])
