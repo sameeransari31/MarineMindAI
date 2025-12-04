@@ -1,25 +1,20 @@
-.message {
-  padding: 12px 16px;
-  margin-bottom: 12px;
-  max-width: 80%;
-  line-height: 1.5;
+/* Basic markdown styling for chat messages */
+.message-content p {
+  margin: 0 0 0.5rem;
 }
 
-.message.user {
-  background-color: #1976d2;
-  color: white;
-  margin-left: auto;
-  border-bottom-right-radius: 4px !important;
-  border-top-right-radius: 20px;
-  border-top-left-radius: 20px;
-  border-bottom-left-radius: 20px;
+.message-content ul,
+.message-content ol {
+  margin: 0.25rem 0 0.5rem 1.25rem;
+  padding: 0;
 }
 
-.message.ai {
-  background-color: #333;
-  margin-right: auto;
-  border-bottom-left-radius: 4px !important;
-  border-top-right-radius: 20px;
-  border-top-left-radius: 20px;
-  border-bottom-right-radius: 20px;
+.message-content strong {
+  font-weight: 600;
+}
+
+.message-content code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
+  font-size: 0.85em;
 }
