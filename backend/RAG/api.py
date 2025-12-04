@@ -2,6 +2,7 @@ import os
 import shutil
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form
 from pydantic import BaseModel
+from typing import Optional
 
 
 
@@ -13,6 +14,13 @@ router = APIRouter(
 class QueryRequest(BaseModel):
     query: str
     session_id: str
+
+class CreateSessionRequest(BaseModel):
+    session_id: Optional[str] = None
+    title: Optional[str] = None
+
+class UpdateSessionRequest(BaseModel):
+    title: Optional[str] = None
 
 
 def process_and_ingest_document(file_path: str, index_path: str):
@@ -59,7 +67,17 @@ async def upload_document(session_id: str = Form(...), file: UploadFile = File(.
 
     try:
         process_and_ingest_document(temp_file_path, index_path)
-        return {"message": "File processed successfully", "index_path": index_path}
+        
+        # Update session metadata with filename as title if no title exists
+        from .session_manager import SessionManager
+        session_manager = SessionManager()
+        session_meta = session_manager.get_session_metadata(session_id)
+        if not session_meta or not session_meta.get("title") or session_meta.get("title") == "New Chat":
+            # Use filename without extension as title
+            title = os.path.splitext(file.filename)[0]
+            session_manager.update_session(session_id, title)
+        
+        return {"message": "File processed successfully", "index_path": index_path, "filename": file.filename}
     except Exception as e:
         print(f"Error processing file: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to process file: {str(e)}")
@@ -102,8 +120,93 @@ async def process_query(request: QueryRequest):
         agent_response = agent_manager.run(request.query)
 
         memory_manager.save_history()
+        
+        # Update session metadata after query
+        from .session_manager import SessionManager
+        session_manager = SessionManager()
+        session_manager.update_session(request.session_id)
+        
         return agent_response
 
     except Exception as e:
         print(f"An error occurred during query processing: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# Session Management Endpoints
+@router.get("/sessions")
+async def list_sessions():
+    """List all chat sessions with metadata."""
+    from .session_manager import SessionManager
+    session_manager = SessionManager()
+    sessions = session_manager.list_sessions()
+    return {"sessions": sessions}
+
+
+@router.post("/sessions")
+async def create_session(request: CreateSessionRequest):
+    """Create a new chat session."""
+    from .session_manager import SessionManager
+    import uuid
+    from datetime import datetime
+    
+    session_manager = SessionManager()
+    
+    # Generate session_id if not provided
+    if not request.session_id:
+        session_id = f"session_{int(datetime.now().timestamp() * 1000)}"
+    else:
+        session_id = request.session_id
+    
+    # Create session
+    metadata = session_manager.create_session(session_id, request.title)
+    
+    return {
+        "session_id": session_id,
+        "metadata": metadata
+    }
+
+
+@router.get("/sessions/{session_id}/history")
+async def get_session_history(session_id: str):
+    """Get conversation history for a specific session."""
+    from .session_manager import SessionManager
+    session_manager = SessionManager()
+    history = session_manager.get_conversation_history(session_id)
+    
+    # Check if document is uploaded
+    index_path = os.path.join("session_indexes", f"faiss_index_{session_id}")
+    has_document = os.path.exists(index_path)
+    
+    return {
+        "session_id": session_id, 
+        "messages": history,
+        "has_document": has_document
+    }
+
+
+@router.delete("/sessions/{session_id}")
+async def delete_session(session_id: str):
+    """Delete a chat session and its history."""
+    from .session_manager import SessionManager
+    session_manager = SessionManager()
+    success = session_manager.delete_session(session_id)
+    
+    if success:
+        return {"message": f"Session {session_id} deleted successfully"}
+    else:
+        raise HTTPException(status_code=500, detail=f"Failed to delete session {session_id}")
+
+
+@router.patch("/sessions/{session_id}")
+async def update_session(session_id: str, request: UpdateSessionRequest):
+    """Update session metadata (e.g., title)."""
+    from .session_manager import SessionManager
+    session_manager = SessionManager()
+    session_manager.update_session(session_id, request.title)
+    metadata = session_manager.get_session_metadata(session_id)
+    
+    return {
+        "session_id": session_id,
+        "metadata": metadata
+    }
