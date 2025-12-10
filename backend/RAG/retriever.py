@@ -1,6 +1,7 @@
-from langchain.schema import Document, BaseRetriever
-from langchain.prompts import PromptTemplate
-from langchain.callbacks.manager import CallbackManagerForRetrieverRun
+from langchain_core.documents import Document
+from langchain_core.retrievers import BaseRetriever
+from langchain_core.prompts import PromptTemplate
+from langchain_core.callbacks import CallbackManagerForRetrieverRun
 from typing import List, Optional, Any, Dict, Tuple
 from datetime import datetime
 import logging
