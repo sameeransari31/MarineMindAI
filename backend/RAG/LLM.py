@@ -4,7 +4,7 @@ from typing import List, Optional
 
 from dotenv import load_dotenv
 from langchain_groq import ChatGroq
-from langchain.agents import AgentExecutor, create_structured_chat_agent
+from langchain.agents import create_agent
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder, SystemMessagePromptTemplate
 from langchain_core.tools import Tool
 from langchain.tools import StructuredTool
@@ -167,9 +167,9 @@ class AgentManager:
                 break
 
 
-        agent = create_structured_chat_agent(self.llm, self.tools, prompt)
+        agent = create_agent(self.llm, self.tools, prompt)
         
-        self.agent_executor = AgentExecutor(
+        self.agent_executor = create_agent(
             agent=agent,
             tools=self.tools,
             memory=self.memory,
