@@ -9,7 +9,7 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder, Syst
 from langchain_core.tools import Tool
 from langchain.tools import StructuredTool
 from pydantic import BaseModel, Field
-from langchain_community.memory import ConversationBufferWindowMemory
+from langchain_classic.memory import ConversationBufferWindowMemory
 from .retriever import HybridRetriever
 from langchain import hub
 
