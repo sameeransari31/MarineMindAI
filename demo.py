@@ -1,6 +1,6 @@
-from langchain.schema import Document
-from RAG.embedding import EmbeddingGenerator
-from RAG.chunking import DocumentChunker
+from langchain_core.documents import Document
+from backend.RAG.embedding import EmbeddingGenerator
+from backend.RAG.chunking import DocumentChunker
 
 # Step 1: Create some sample documents
 docs = [
