@@ -86,9 +86,7 @@ class MemoryManager:
         except Exception as e:
             logging.error(f"Failed to save history for session {self.session_id}: {e}")
 
-    def get_memory(self) -> BaseMemory:
-        """Provides access to the configured memory object."""
-        return self.memory
+  
 
     def clear_memory(self):
         """
