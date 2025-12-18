@@ -1,4 +1,4 @@
-from langchain.schema.document import Document
+from langchain_core.documents import Document
 from typing import List
 import logging
 import os
