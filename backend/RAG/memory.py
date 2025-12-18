@@ -3,7 +3,7 @@ import json
 import logging
 from typing import Dict, Any, List
 
-from langchain.memory import ConversationBufferWindowMemory
+from langchain_community.memory import ConversationBufferWindowMemory
 from langchain.schema import BaseMemory, messages_from_dict, messages_to_dict
 
 
