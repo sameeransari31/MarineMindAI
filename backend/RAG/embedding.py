@@ -32,7 +32,7 @@ class EmbeddingGenerator:
         self.embedding_model = HuggingFaceEmbeddings(
             model_name=model_name,
             model_kwargs={"device": device or "cpu"},
-            encode_kwargs={"normalize_embeddings": normalize, "truncation": True, "padding": True}
+            encode_kwargs={"normalize_embeddings": normalize, "batch_size": 32, "show_progress_bar": False}
         )
         self.hybrid_embedding_model = None
         if hybrid_model_name:
@@ -40,7 +40,7 @@ class EmbeddingGenerator:
             self.hybrid_embedding_model = HuggingFaceEmbeddings(
                 model_name=hybrid_model_name,
                 model_kwargs={"device": device or "cpu"},
-                encode_kwargs={"normalize_embeddings": normalize, "truncation": True, "padding": True}
+                encode_kwargs={"normalize_embeddings": normalize,"batch_size": 32, "show_progress_bar": False}
             )
 
         self.batch_size = batch_size
