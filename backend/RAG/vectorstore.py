@@ -1,5 +1,5 @@
 from langchain_community.vectorstores import FAISS
-from langchain.schema import Document
+from langchain_core.documents import Document
 from typing import List, Optional, Any, Dict
 import logging
 import os
