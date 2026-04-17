@@ -39,7 +39,14 @@ cd MarineMind
 pip install -r requirements.txt
 
 # Run application
-python app.py
+For Backend:
+ - First Create Superuser
+ - Enter this command - `python manage.py runserver 0.0.0.0:8000`
+
+For Frontend:
+ - Redirect to front directory - `cd frontend`
+ - Install npm - `npm install`
+ - Run the Frontend server  - `npm run dev`
 ```
 
 ***
