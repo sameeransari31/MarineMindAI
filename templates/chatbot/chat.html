@@ -1,0 +1,480 @@
+{% extends "base.html" %}
+{% block title %}MarineMind — AI Maritime Assistant{% endblock %}
+
+{% block extra_styles %}
+.chat-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.welcome-screen {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 16px;
+    opacity: 0.8;
+}
+
+.welcome-screen h2 {
+    font-size: 28px;
+    color: var(--accent);
+}
+
+.welcome-screen p {
+    color: var(--text-muted);
+    max-width: 500px;
+    line-height: 1.6;
+}
+
+.welcome-suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 12px;
+}
+
+.suggestion-chip {
+    padding: 10px 16px;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.2s;
+}
+
+.suggestion-chip:hover {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+.message {
+    display: flex;
+    gap: 12px;
+    max-width: 85%;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.message.user {
+    align-self: flex-end;
+    flex-direction: row-reverse;
+}
+
+.message-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.message.user .message-avatar {
+    background: var(--primary);
+}
+
+.message.assistant .message-avatar {
+    background: var(--accent);
+    color: var(--bg-dark);
+}
+
+.message-bubble {
+    padding: 14px 18px;
+    border-radius: 16px;
+    line-height: 1.6;
+    font-size: 14px;
+}
+
+.message.user .message-bubble {
+    background: var(--primary);
+    border-bottom-right-radius: 4px;
+}
+
+.message.assistant .message-bubble {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-bottom-left-radius: 4px;
+}
+
+.message-meta {
+    display: flex;
+    gap: 8px;
+    margin-top: 6px;
+    font-size: 11px;
+    color: var(--text-muted);
+    align-items: center;
+}
+
+.input-area {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+    background: var(--bg-card);
+}
+
+.input-wrapper {
+    display: flex;
+    gap: 12px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.input-wrapper textarea {
+    flex: 1;
+    padding: 14px 18px;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--text-primary);
+    font-size: 14px;
+    font-family: inherit;
+    resize: none;
+    outline: none;
+    min-height: 48px;
+    max-height: 120px;
+    transition: border-color 0.2s;
+}
+
+.input-wrapper textarea:focus {
+    border-color: var(--accent);
+}
+
+.send-btn {
+    padding: 14px 24px;
+    background: var(--accent);
+    color: var(--bg-dark);
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 700;
+    transition: opacity 0.2s;
+    align-self: flex-end;
+}
+
+.send-btn:hover { opacity: 0.85; }
+.send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.typing-indicator {
+    display: none;
+    align-self: flex-start;
+    padding: 12px 18px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    border-bottom-left-radius: 4px;
+    gap: 6px;
+    align-items: center;
+}
+
+.typing-indicator.visible { display: flex; }
+
+.typing-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--text-muted);
+    border-radius: 50%;
+    animation: typingBounce 1.4s infinite;
+}
+
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes typingBounce {
+    0%, 60%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-6px); }
+}
+
+.sources-toggle {
+    cursor: pointer;
+    color: var(--accent);
+    font-size: 12px;
+    margin-top: 6px;
+}
+
+.sources-list {
+    display: none;
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: var(--bg-dark);
+    border-radius: 8px;
+    font-size: 12px;
+}
+
+.sources-list.visible { display: block; }
+{% endblock %}
+
+{% block body %}
+<div class="app-layout">
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div>
+                <div class="logo">⚓ MarineMind</div>
+                <div class="subtitle">AI Maritime Assistant</div>
+            </div>
+        </div>
+
+        <button class="new-chat-btn" onclick="startNewChat()">+ New Chat</button>
+
+        <div class="nav-links">
+            <a href="/" class="active">💬 Chat</a>
+            <a href="/ingestion/">📄 Documents</a>
+        </div>
+
+        <div class="session-list" id="sessionList">
+            {% for s in sessions %}
+            <div class="session-item {% if current_session and s.id == current_session.id %}active{% endif %}"
+                 onclick="loadSession('{{ s.id }}')"
+                 title="{{ s.title }}">
+                {{ s.title }}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Main -->
+    <div class="main-content">
+        <div class="topbar">
+            <h1 id="chatTitle">
+                {% if current_session %}{{ current_session.title }}{% else %}New Conversation{% endif %}
+            </h1>
+            <div id="routeBadge"></div>
+        </div>
+
+        <div class="chat-area" id="chatArea">
+            {% if messages %}
+                {% for msg in messages %}
+                <div class="message {{ msg.role }}">
+                    <div class="message-avatar">
+                        {% if msg.role == 'user' %}👤{% else %}🤖{% endif %}
+                    </div>
+                    <div>
+                        <div class="message-bubble">{{ msg.content }}</div>
+                        {% if msg.role == 'assistant' and msg.agent_used %}
+                        <div class="message-meta">
+                            <span class="badge badge-{{ msg.route }}">{{ msg.route }}</span>
+                            <span>Agent: {{ msg.agent_used }}</span>
+                            {% if msg.processing_time %}
+                            <span>{{ msg.processing_time }}s</span>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="welcome-screen" id="welcomeScreen">
+                    <h2>⚓ Welcome to MarineMind</h2>
+                    <p>Your AI-powered maritime assistant. Ask questions about ship manuals, vessel performance, marine regulations, and more.</p>
+                    <div class="welcome-suggestions">
+                        <div class="suggestion-chip" onclick="useSuggestion(this)">What is the fuel oil purifier procedure?</div>
+                        <div class="suggestion-chip" onclick="useSuggestion(this)">Latest IMO emission regulations</div>
+                        <div class="suggestion-chip" onclick="useSuggestion(this)">Main engine maintenance schedule</div>
+                        <div class="suggestion-chip" onclick="useSuggestion(this)">Explain turbocharger surging</div>
+                    </div>
+                </div>
+            {% endif %}
+
+            <div class="typing-indicator" id="typingIndicator">
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            </div>
+        </div>
+
+        <div class="input-area">
+            <div class="input-wrapper">
+                <textarea id="userInput"
+                          placeholder="Ask about ship systems, manuals, regulations..."
+                          rows="1"
+                          onkeydown="handleKeyDown(event)"></textarea>
+                <button class="send-btn" id="sendBtn" onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentSessionId = "{{ current_session.id|default:'' }}";
+    const chatArea = document.getElementById('chatArea');
+    const userInput = document.getElementById('userInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const typingIndicator = document.getElementById('typingIndicator');
+    const welcomeScreen = document.getElementById('welcomeScreen');
+
+    // Auto-resize textarea
+    userInput.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+    });
+
+    function handleKeyDown(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    }
+
+    function useSuggestion(el) {
+        userInput.value = el.textContent;
+        sendMessage();
+    }
+
+    function startNewChat() {
+        currentSessionId = '';
+        chatArea.innerHTML = `
+            <div class="welcome-screen" id="welcomeScreen">
+                <h2>⚓ Welcome to MarineMind</h2>
+                <p>Your AI-powered maritime assistant.</p>
+                <div class="welcome-suggestions">
+                    <div class="suggestion-chip" onclick="useSuggestion(this)">What is the fuel oil purifier procedure?</div>
+                    <div class="suggestion-chip" onclick="useSuggestion(this)">Latest IMO emission regulations</div>
+                    <div class="suggestion-chip" onclick="useSuggestion(this)">Main engine maintenance schedule</div>
+                    <div class="suggestion-chip" onclick="useSuggestion(this)">Explain turbocharger surging</div>
+                </div>
+            </div>
+            <div class="typing-indicator" id="typingIndicator">
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            </div>`;
+        document.getElementById('chatTitle').textContent = 'New Conversation';
+        window.history.pushState({}, '', '/');
+    }
+
+    function loadSession(sessionId) {
+        window.location.href = '/chat/' + sessionId + '/';
+    }
+
+    function addMessage(role, content, meta = {}) {
+        const welcome = document.getElementById('welcomeScreen');
+        if (welcome) welcome.remove();
+
+        const msgDiv = document.createElement('div');
+        msgDiv.className = 'message ' + role;
+
+        let avatar = role === 'user' ? '👤' : '🤖';
+        let metaHtml = '';
+
+        if (role === 'assistant' && meta.route) {
+            metaHtml = `<div class="message-meta">
+                <span class="badge badge-${meta.route}">${meta.route}</span>
+                <span>Agent: ${meta.agent || ''}</span>
+                ${meta.processing_time ? `<span>${meta.processing_time}s</span>` : ''}
+            </div>`;
+
+            if (meta.sources && ((Array.isArray(meta.sources) && meta.sources.length > 0) ||
+                (typeof meta.sources === 'object' && !Array.isArray(meta.sources)))) {
+                let sourcesHtml = '';
+                if (Array.isArray(meta.sources)) {
+                    sourcesHtml = meta.sources.map(s =>
+                        `<div>• ${s.source || s.title || s.url || JSON.stringify(s)}</div>`
+                    ).join('');
+                } else {
+                    if (meta.sources.internal) {
+                        sourcesHtml += '<div><strong>Internal:</strong></div>';
+                        sourcesHtml += meta.sources.internal.map(s => `<div>• ${s.source || ''}</div>`).join('');
+                    }
+                    if (meta.sources.external) {
+                        sourcesHtml += '<div><strong>External:</strong></div>';
+                        sourcesHtml += meta.sources.external.map(s => `<div>• <a href="${s.url}" target="_blank" style="color:var(--accent)">${s.title}</a></div>`).join('');
+                    }
+                }
+                metaHtml += `
+                    <div class="sources-toggle" onclick="this.nextElementSibling.classList.toggle('visible')">📎 View Sources</div>
+                    <div class="sources-list">${sourcesHtml}</div>`;
+            }
+        }
+
+        msgDiv.innerHTML = `
+            <div class="message-avatar">${avatar}</div>
+            <div>
+                <div class="message-bubble">${escapeHtml(content)}</div>
+                ${metaHtml}
+            </div>`;
+
+        const indicator = document.getElementById('typingIndicator');
+        chatArea.insertBefore(msgDiv, indicator);
+        chatArea.scrollTop = chatArea.scrollHeight;
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML.replace(/\n/g, '<br>');
+    }
+
+    async function sendMessage() {
+        const message = userInput.value.trim();
+        if (!message) return;
+
+        userInput.value = '';
+        userInput.style.height = 'auto';
+        sendBtn.disabled = true;
+
+        addMessage('user', message);
+
+        // Show typing indicator
+        typingIndicator.classList.add('visible');
+        chatArea.scrollTop = chatArea.scrollHeight;
+
+        try {
+            const payload = { message };
+            if (currentSessionId) payload.session_id = currentSessionId;
+
+            const response = await fetch('/api/chat/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                currentSessionId = data.session_id;
+                addMessage('assistant', data.answer, {
+                    agent: data.agent,
+                    route: data.route,
+                    sources: data.sources,
+                    processing_time: data.processing_time,
+                });
+                document.getElementById('chatTitle').textContent = message.substring(0, 50);
+
+                // Update URL
+                window.history.pushState({}, '', '/chat/' + currentSessionId + '/');
+            } else {
+                addMessage('assistant', data.error || 'An error occurred. Please try again.');
+            }
+        } catch (err) {
+            addMessage('assistant', 'Connection error. Please check your server and try again.');
+        } finally {
+            typingIndicator.classList.remove('visible');
+            sendBtn.disabled = false;
+            userInput.focus();
+        }
+    }
+
+    // Focus input on load
+    userInput.focus();
+
+    // Scroll to bottom on load
+    chatArea.scrollTop = chatArea.scrollHeight;
+</script>
+{% endblock %}

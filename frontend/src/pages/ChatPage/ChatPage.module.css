@@ -1,0 +1,151 @@
+.page {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  height: 100vh;
+  position: relative;
+}
+
+.topbar {
+  padding: 0 var(--space-6);
+  height: var(--topbar-height);
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-secondary);
+  flex-shrink: 0;
+}
+
+.topbarLeft {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.topbarDot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  background: var(--success);
+  flex-shrink: 0;
+  box-shadow: 0 0 6px rgba(52, 211, 153, 0.4);
+}
+
+.title {
+  font-size: var(--text-md);
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.adminLink {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  font-family: inherit;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+  text-decoration: none;
+}
+
+.adminLink:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  border-color: var(--accent);
+  text-decoration: none;
+}
+
+.adminText {
+  display: inline;
+}
+
+/* ── Chat Area ───────────────────────────────── */
+.chatArea {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.chatInner {
+  max-width: var(--chat-max-width);
+  width: 100%;
+  margin: 0 auto;
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  flex: 1;
+}
+
+/* ── Error Banner ────────────────────────────── */
+.errorBanner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--error-muted);
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  border-radius: var(--radius-lg);
+  color: var(--error);
+  font-size: var(--text-sm);
+  animation: fadeIn 0.3s ease;
+}
+
+/* ── Scroll to Bottom ────────────────────────── */
+.scrollBtn {
+  position: absolute;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  background: var(--bg-card);
+  border: 1px solid var(--border-primary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-md);
+  transition: all var(--transition-fast);
+  z-index: 10;
+  animation: fadeIn 0.2s ease;
+}
+
+.scrollBtn:hover {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+/* ── Responsive ──────────────────────────────── */
+@media (max-width: 768px) {
+  .topbar {
+    padding: 0 var(--space-4);
+    padding-left: 56px; /* space for hamburger */
+  }
+
+  .adminText {
+    display: none;
+  }
+
+  .chatInner {
+    padding: var(--space-4);
+    gap: var(--space-4);
+  }
+}

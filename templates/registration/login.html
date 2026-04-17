@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login — MarineMind</title>
+    <style>
+        :root {
+            --primary: #0f4c81;
+            --primary-dark: #0a3259;
+            --primary-light: #1a6bb5;
+            --accent: #00b4d8;
+            --bg-dark: #0b1929;
+            --bg-card: #132f4c;
+            --bg-input: #1a3a5c;
+            --text-primary: #e3f2fd;
+            --text-secondary: #90caf9;
+            --text-muted: #64b5f6;
+            --border: #1e4976;
+            --error: #f44336;
+            --shadow: 0 4px 24px rgba(0,0,0,0.3);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 420px;
+            padding: 40px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .login-header .logo {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .login-header .subtitle {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-top: 4px;
+        }
+
+        .login-header p {
+            margin-top: 12px;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 14px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus {
+            border-color: var(--accent);
+        }
+
+        .form-group input::placeholder {
+            color: var(--text-muted);
+            opacity: 0.6;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            transition: background 0.2s;
+            margin-top: 8px;
+        }
+
+        .login-btn:hover {
+            background: var(--primary-light);
+        }
+
+        .error-messages {
+            background: rgba(244, 67, 54, 0.12);
+            border: 1px solid var(--error);
+            border-radius: 8px;
+            padding: 12px 14px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            color: var(--error);
+        }
+
+        .error-messages ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .error-messages li {
+            margin-bottom: 4px;
+        }
+
+        .error-messages li:last-child {
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <div class="logo">🌊 MarineMind</div>
+            <div class="subtitle">Maritime Intelligence Platform</div>
+            <p>Sign in to continue</p>
+        </div>
+
+        {% if form.errors %}
+        <div class="error-messages">
+            <ul>
+                {% for field, errors in form.errors.items %}
+                    {% for error in errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="id_username">Email</label>
+                <input type="email" name="username" id="id_username"
+                       placeholder="Enter your email" autofocus required>
+            </div>
+            <div class="form-group">
+                <label for="id_password">Password</label>
+                <input type="password" name="password" id="id_password"
+                       placeholder="Enter your password" required>
+            </div>
+            <button type="submit" class="login-btn">Sign In</button>
+        </form>
+    </div>
+</body>
+</html>

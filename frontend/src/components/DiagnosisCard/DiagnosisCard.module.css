@@ -1,0 +1,254 @@
+/* ── Diagnosis Card ─────────────────────────────────────── */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg, 12px);
+  padding: var(--space-4, 16px);
+  margin-top: var(--space-3, 12px);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3, 12px);
+}
+
+/* ── Header ─────────────────────────────────── */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2, 8px);
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-accent, #5cc8e0);
+}
+
+.headerTitle {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  flex-wrap: wrap;
+}
+
+/* ── Severity Badges ────────────────────────── */
+.severityBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.severityLow {
+  background: #34d39918;
+  color: #34d399;
+  border: 1px solid #34d39930;
+}
+
+.severityMedium {
+  background: #fbbf2418;
+  color: #fbbf24;
+  border: 1px solid #fbbf2430;
+}
+
+.severityHigh {
+  background: #fb923c18;
+  color: #fb923c;
+  border: 1px solid #fb923c30;
+}
+
+.severityCritical {
+  background: #f8717118;
+  color: #f87171;
+  border: 1px solid #f8717130;
+}
+
+.categoryBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  background: var(--accent-muted, #00b4d820);
+  color: var(--text-accent, #5cc8e0);
+  border: 1px solid var(--border-primary);
+}
+
+/* ── Sections ───────────────────────────────── */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-secondary, #94b3d0);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ── Tags ───────────────────────────────────── */
+.tagList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.symptomTag {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 16px;
+  font-size: 0.78rem;
+  background: #f8717115;
+  color: #f8a4a4;
+  border: 1px solid #f8717125;
+}
+
+.componentTag {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 16px;
+  font-size: 0.78rem;
+  background: #60a5fa15;
+  color: #93c5fd;
+  border: 1px solid #60a5fa25;
+}
+
+/* ── Trends ─────────────────────────────────── */
+.trendList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.trendItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--bg-elevated, #1a3050);
+  font-size: 0.82rem;
+}
+
+.trendIcon {
+  display: flex;
+  align-items: center;
+}
+
+.trendMetric {
+  font-weight: 600;
+  color: var(--text-primary, #e8eef4);
+  min-width: 110px;
+}
+
+.trendChange {
+  font-weight: 700;
+  font-size: 0.85rem;
+  min-width: 60px;
+}
+
+.trendUp {
+  color: #f87171;
+}
+
+.trendDown {
+  color: #34d399;
+}
+
+.trendDetail {
+  color: var(--text-muted, #5e7f9e);
+  font-size: 0.78rem;
+}
+
+/* ── Anomalies ──────────────────────────────── */
+.anomalyList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.anomalyItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: #f8717108;
+  border: 1px solid #f8717115;
+  font-size: 0.8rem;
+}
+
+.anomalyDate {
+  color: var(--text-muted, #5e7f9e);
+  font-size: 0.75rem;
+  min-width: 80px;
+}
+
+.anomalyLabel {
+  color: #f8a4a4;
+  font-weight: 500;
+  min-width: 120px;
+}
+
+.anomalyValue {
+  color: var(--text-primary, #e8eef4);
+  font-weight: 600;
+}
+
+.anomalyRange {
+  color: var(--text-muted, #5e7f9e);
+  font-weight: 400;
+  font-size: 0.75rem;
+}
+
+/* ── Footer ─────────────────────────────────── */
+.footer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3, 12px);
+  padding-top: var(--space-2, 8px);
+  border-top: 1px solid var(--border-subtle, #172e50);
+  flex-wrap: wrap;
+}
+
+.sourceIndicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  color: var(--text-muted, #5e7f9e);
+  padding: 2px 8px;
+  border-radius: 12px;
+  background: var(--bg-elevated, #1a3050);
+}
+
+.sourceActive {
+  color: var(--success, #34d399);
+  background: var(--success-muted, #34d39918);
+}
+
+.vesselName {
+  font-size: 0.72rem;
+  color: var(--text-secondary, #94b3d0);
+  margin-left: auto;
+}

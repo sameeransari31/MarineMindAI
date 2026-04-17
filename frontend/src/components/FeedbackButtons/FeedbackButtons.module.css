@@ -1,0 +1,131 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.buttons {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.feedbackBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--border-subtle);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.feedbackBtn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+  border-color: var(--accent);
+}
+
+.feedbackBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.active {
+  color: var(--success) !important;
+}
+
+.active:hover:not(:disabled) {
+  color: var(--success) !important;
+}
+
+.activeNeg {
+  color: #f87171 !important;
+}
+
+.activeNeg:hover:not(:disabled) {
+  color: #f87171 !important;
+}
+
+/* ── Note Box ────────────────────────────────── */
+.noteBox {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  background: var(--bg-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.noteInput {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: var(--text-sm);
+  resize: vertical;
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+
+.noteInput:focus {
+  border-color: var(--accent);
+}
+
+.noteInput::placeholder {
+  color: var(--text-muted);
+}
+
+.noteActions {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: flex-end;
+}
+
+.noteCancel,
+.noteSubmit {
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  border: none;
+}
+
+.noteCancel {
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.noteCancel:hover {
+  color: var(--text-secondary);
+}
+
+.noteSubmit {
+  background: var(--accent);
+  color: white;
+}
+
+.noteSubmit:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.noteSubmit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

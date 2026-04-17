@@ -1,0 +1,17 @@
+django>=5.0
+djangorestframework
+python-dotenv
+pinecone
+sentence-transformers
+tavily-python
+langchain
+langchain-community
+langchain-text-splitters
+pypdf
+Pillow
+requests
+huggingface-hub
+openai
+tiktoken
+django-cors-headers
+openpyxl
